@@ -1,27 +1,27 @@
-import axios from "axios";
-import { Movie } from "../types/movie";
+import axios from 'axios';
+import { Movie } from '../types/movie';
 
-const BASE_URL = "https://api.themoviedb.org/3";
-const SEARCH_URL = `${BASE_URL}/search/movie`;
-
-interface FetchMoviesParams {
-  query: string;
+export interface MoviesResponse {
+  page: number;
+  results: Movie[];
+  total_pages: number;
+  total_results: number;
 }
 
-export const fetchMovies = async ({
-  query,
-}: FetchMoviesParams): Promise<Movie[]> => {
-  const response = await axios.get(SEARCH_URL, {
+const BASE_URL = 'https://api.themoviedb.org/3';
+
+export async function fetchMovies(params: { query: string; page?: number }) {
+  const { query, page = 1 } = params;
+
+  const response = await axios.get<MoviesResponse>(`${BASE_URL}/search/movie`, {
     params: {
       query,
-      include_adult: false,
-      language: "en-US",
-      page: 1,
+      page,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZTcwYjcwZWNkY2MzNmY2YTM0YmY5OTk1YzJiMTI4OCIsIm5iZiI6MTc0ODczMTQ5Ny45OTksInN1YiI6IjY4M2I4NjY5YjI5MGQ1ZDJjMDI4ODZiZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.76CIlWte2ofDyjuy7bPcEKzwp-A7OWwQfMFil2IJs24`,
+      Authorization: `Bearer ${import.meta.env.VITE_TMDB_TOKEN}`,
     },
   });
 
-  return response.data.results;
-};
+  return response.data;
+}

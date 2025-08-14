@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Toaster, toast } from 'react-hot-toast';
-import { Movie, MoviesApiResponse } from '../../types/movie';
-import { fetchMovies } from '../../services/movieService';
+import { Movie } from '../../types/movie';
+import { fetchMovies, MoviesApiResponse } from '../../services/movieService';
 import SearchBar from '../SearchBar/SearchBar';
 import MovieGrid from '../MovieGrid/MovieGrid';
 import MovieModal from '../MovieModal/MovieModal';
@@ -15,22 +15,11 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const { 
-    data: moviesData, 
-    isLoading, 
-    isError,
-    isFetching
-  } = useQuery<MoviesApiResponse, Error>({
+  
+  const { data: moviesData, isLoading, isError } = useQuery<MoviesApiResponse, Error>({
     queryKey: ['movies', searchQuery, page],
-    queryFn: async () => {
-      try {
-        return await fetchMovies(searchQuery, page);
-      } catch {
-        toast.error('Failed to fetch movies');
-        throw new Error('Failed to fetch movies');
-      }
-    },
-    enabled: !!searchQuery.trim(),
+    queryFn: () => fetchMovies(searchQuery, page),
+    enabled: !!searchQuery.trim(), 
     staleTime: 10_000,
     refetchOnWindowFocus: false,
   });
@@ -58,11 +47,8 @@ export default function App() {
         <>
           {movies.length > 0 ? (
             <>
-              <MovieGrid 
-                movies={movies} 
-                onSelect={setSelectedMovie} 
-              />
-              
+              <MovieGrid movies={movies} onSelect={setSelectedMovie} />
+
               {totalPages > 1 && (
                 <div className={css.paginationContainer}>
                   <button
@@ -72,11 +58,11 @@ export default function App() {
                   >
                     Previous
                   </button>
-                  
+
                   <span className={css.pageInfo}>
                     Page {page} of {totalPages}
                   </span>
-                  
+
                   <button
                     onClick={() => setPage(p => Math.min(p + 1, totalPages))}
                     disabled={page >= totalPages}
@@ -96,10 +82,7 @@ export default function App() {
       )}
 
       {selectedMovie && (
-        <MovieModal 
-          movie={selectedMovie} 
-          onClose={() => setSelectedMovie(null)} 
-        />
+        <MovieModal movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
       )}
 
       <Toaster position="top-right" />

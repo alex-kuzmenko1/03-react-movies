@@ -1,35 +1,67 @@
-import { useState } from 'react';
-import toast from 'react-hot-toast';
-import css from './SearchBar.module.css';
+import { useRef, FormEvent } from "react";
+import toast from "react-hot-toast";
+import styles from "./SearchBar.module.css";
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
+  onSubmit: (query: string) => void;
 }
 
-export function SearchBar({ onSearch }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+export default function SearchBar({ onSubmit }: SearchBarProps) {
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!query.trim()) {
-      toast.error('Please enter a search term');
+    
+    const formData = new FormData(e.currentTarget);
+    const query = (formData.get("query") as string).trim();
+
+    if (!query) {
+      toast.error("Please enter your search query.");
       return;
     }
-    onSearch(query);
+
+    try {
+      await onSubmit(query);
+      formRef.current?.reset();
+    } catch (error) {
+      toast.error("Search failed. Please try again.");
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className={css.searchForm}>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search movies..."
-        className={css.searchInput}
-      />
-      <button type="submit" className={css.searchButton}>
-        Search
-      </button>
-    </form>
+    <header className={styles.header}>
+      <div className={styles.container}>
+        <a
+          className={styles.link}
+          href="https://www.themoviedb.org/"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >
+          Powered by TMDB
+        </a>
+        <form 
+          ref={formRef}
+          className={styles.form} 
+          onSubmit={handleSubmit}
+        >
+          <input
+            className={styles.input}
+            type="text"
+            name="query"
+            autoComplete="off"
+            placeholder="Search movies..."
+            autoFocus
+            aria-label="Search movies"
+          />
+          <button 
+            className={styles.button} 
+            type="submit"
+            aria-label="Submit search"
+          >
+            Search
+          </button>
+        </form>
+      </div>
+    </header>
   );
 }

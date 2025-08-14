@@ -1,23 +1,40 @@
-import axios from 'axios';
-import { Movie, MoviesApiResponse } from '../types/movie';
+import axios from "axios";
+import type { Movie, MoviesApiResponse } from "../types/movie";
 
-export async function fetchMovies(query: string, page = 1): Promise<MoviesApiResponse> {
-  const apiKey = process.env.REACT_APP_TMDB_API_KEY;
-  if (!apiKey) throw new Error('API key is missing');
+const API_URL = "https://api.themoviedb.org/3/search/movie";
+const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
-  const response = await axios.get<MoviesApiResponse>(
-    `https://api.themoviedb.org/3/search/movie`,
-    {
-      params: {
-        query,
-        page,
-        include_adult: false,
-      },
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    }
-  );
+export const fetchMovies = async (query: string, page = 1): Promise<MoviesApiResponse> => {
 
-  return response.data;
-}
+  if (!API_TOKEN) {
+    throw new Error("TMDB API token is not configured");
+  }
+
+ 
+  const config = {
+    params: { 
+      query,
+      page,
+      include_adult: false, 
+      language: "en-US",   
+    },
+    headers: {
+      Authorization: `Bearer ${API_TOKEN}`,
+      Accept: "application/json",
+    },
+  };
+
+  try {
+    
+    const response = await axios.get<MoviesApiResponse>(API_URL, config);
+    
+   
+    console.log("API Response:", response.data);
+    
+    return response.data;
+  } catch (error) {
+   
+    console.error("Error fetching movies:", error);
+    throw error;
+  }
+};

@@ -1,41 +1,35 @@
-import { toast } from "react-hot-toast";
-import { useState } from "react";
-import css from "./SearchBar.module.css";
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import css from './SearchBar.module.css';
 
-export interface SearchBarProps {
-  action: (formData: FormData) => void;
+interface SearchBarProps {
+  onSearch: (query: string) => void;
 }
 
-export default function SearchBar({ action }: SearchBarProps) {
-  const [query, setQuery] = useState("");
+export function SearchBar({ onSearch }: SearchBarProps) {
+  const [query, setQuery] = useState('');
 
-  const handleAction = (formData: FormData) => {
-    const value = (formData.get("query") as string).trim();
-
-    if (!value) {
-      toast.error("Please enter a search term.");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) {
+      toast.error('Please enter a search term');
       return;
     }
-
-    action(formData);
+    onSearch(query);
   };
 
   return (
-    <header className={css.header}>
-      <form className={css.form} action={handleAction}>
-        <input
-          className={css.input}
-          type="text"
-          name="query"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          autoComplete="off"
-          placeholder="Search movies..."
-        />
-        <button className={css.button} type="submit">
-          Search
-        </button>
-      </form>
-    </header>
+    <form onSubmit={handleSubmit} className={css.searchForm}>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search movies..."
+        className={css.searchInput}
+      />
+      <button type="submit" className={css.searchButton}>
+        Search
+      </button>
+    </form>
   );
 }

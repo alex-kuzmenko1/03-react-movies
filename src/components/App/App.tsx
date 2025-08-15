@@ -15,26 +15,25 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  
   const { data: moviesData, isLoading, isError } = useQuery<MoviesApiResponse, Error>({
-    queryKey: ['movies', searchQuery, page],
-    queryFn: () => fetchMovies(searchQuery, page),
-    enabled: !!searchQuery.trim(), 
-    staleTime: 10_000,
-    refetchOnWindowFocus: false,
-  });
+  queryKey: ['movies', searchQuery],
+  queryFn: () => fetchMovies(searchQuery),
+  enabled: !!searchQuery.trim(),
+  staleTime: 10_000,
+  refetchOnWindowFocus: false,
+});
+
+if (isError) {
+  toast.error('Failed to fetch movies');
+}
+  const movies = moviesData?.results ?? [];
+  const totalPages = Math.ceil(movies.length / 10);
+  const paginatedMovies = movies.slice((page - 1) * 10, page * 10);
 
   const handleSearch = (query: string) => {
-    if (!query.trim()) {
-      toast.error('Please enter a search term');
-      return;
-    }
-    setPage(1); 
+    setPage(1);
     setSearchQuery(query);
   };
-
-  const movies = moviesData?.results ?? [];
-  const totalPages = moviesData?.total_pages ?? 0;
 
   return (
     <div className={css.container}>
@@ -45,10 +44,9 @@ export default function App() {
 
       {!isLoading && !isError && (
         <>
-          {movies.length > 0 ? (
+          {paginatedMovies.length > 0 ? (
             <>
-              <MovieGrid movies={movies} onSelect={setSelectedMovie} />
-
+              <MovieGrid movies={paginatedMovies} onSelect={setSelectedMovie} />
               {totalPages > 1 && (
                 <div className={css.paginationContainer}>
                   <button
@@ -58,11 +56,9 @@ export default function App() {
                   >
                     Previous
                   </button>
-
                   <span className={css.pageInfo}>
                     Page {page} of {totalPages}
                   </span>
-
                   <button
                     onClick={() => setPage(p => Math.min(p + 1, totalPages))}
                     disabled={page >= totalPages}
@@ -74,9 +70,7 @@ export default function App() {
               )}
             </>
           ) : searchQuery && (
-            <div className={css.noResults}>
-              No movies found for "{searchQuery}"
-            </div>
+            <div className={css.noResults}>No movies found for "{searchQuery}"</div>
           )}
         </>
       )}
